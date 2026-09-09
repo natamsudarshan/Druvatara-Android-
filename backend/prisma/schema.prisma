@@ -1,0 +1,957 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PARENT
+  CO_PARENT
+  GUARDIAN_VIEWER
+  ADMIN
+  SUPPORT
+}
+
+enum FamilyMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum ChildAgeGroup {
+  TODDLER
+  YOUNG_CHILD
+  PRE_TEEN
+  TEENAGER
+}
+
+enum DevicePlatform {
+  ANDROID
+  IOS
+}
+
+enum DeviceStatus {
+  PAIRING
+  ACTIVE
+  OFFLINE
+  PARTIALLY_PROTECTED
+  SUSPENDED
+  REMOVED
+  UNSUPPORTED
+}
+
+enum ConnectionType {
+  WIFI
+  CELLULAR
+  ETHERNET
+  UNKNOWN
+}
+
+enum PolicyType {
+  SCREEN_TIME
+  APP_LIMIT
+  SCHEDULE
+  WEB_SAFETY
+  LOCATION
+  GEOFENCE
+}
+
+enum AlertSeverity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  NEW
+  ACKNOWLEDGED
+  RESOLVED
+  FALSE_POSITIVE
+  DISMISSED
+}
+
+enum RequestType {
+  MORE_TIME
+  APP_ACCESS
+  WEBSITE_ACCESS
+  SCHEDULE_EXCEPTION
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  MODIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum SubscriptionTier {
+  FREE
+  BASIC
+  PREMIUM
+  FAMILY
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentProvider {
+  STRIPE
+  RAZORPAY
+  PLAY_STORE
+  APP_STORE
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  CANCELLED
+}
+
+enum NotificationChannel {
+  PUSH
+  EMAIL
+  SMS
+  IN_APP
+}
+
+enum AuditAction {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  PAIRING
+  POLICY_CHANGE
+  PERMISSION_CHANGE
+  DATA_EXPORT
+  ACCOUNT_DELETION
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum PrivacyRequestType {
+  ACCESS
+  RECTIFICATION
+  ERASURE
+  RESTRICTION
+  PORTABILITY
+  OBJECTION
+  WITHDRAW_CONSENT
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  emailVerified DateTime?
+  name          String
+  passwordHash  String
+  phone         String?
+  phoneVerified DateTime?
+  country       String   @default("IN")
+  timezone      String   @default("Asia/Kolkata")
+  language      String   @default("en")
+  avatarUrl     String?
+  role          UserRole @default(PARENT)
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  preferences   Json     @default("{}")
+  mfaEnabled    Boolean  @default(false)
+  mfaSecret     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+
+  sessions      Session[]
+  familyMembers FamilyMember[]
+  ownedFamilies Family[]       @relation("FamilyOwner")
+  invitations   Invitation[]   @relation("InvitationSender")
+  receivedInvitations Invitation[] @relation("InvitationReceiver")
+  coParentPermissions CoParentPermission[]
+  childRequests ChildRequest[] @relation("RequestParent")
+  alerts        Alert[]        @relation("AlertParent")
+  auditLogs     AuditLog[]
+  privacyRequests PrivacyRequest[]
+  subscriptions Subscription[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  deviceId     String?
+  deviceName   String?
+  devicePlatform DevicePlatform?
+  ipAddress    String?
+  userAgent    String?
+  accessToken  String   @unique
+  refreshToken String   @unique
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  lastUsedAt   DateTime?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([accessToken])
+  @@index([refreshToken])
+  @@index([expiresAt])
+}
+
+model Family {
+  id          String   @id @default(cuid())
+  name        String
+  ownerId     String
+  timezone    String   @default("Asia/Kolkata")
+  language    String   @default("en")
+  settings    Json     @default("{}")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  owner       User     @relation("FamilyOwner", fields: [ownerId], references: [id])
+  members     FamilyMember[]
+  children    Child[]
+  devices     Device[]
+  policies    Policy[]
+  invitations Invitation[]
+  subscriptions Subscription[]
+  alerts      Alert[]
+  reports     Report[]
+  coParentPermissions CoParentPermission[]
+  pairingSessions PairingSession[]
+
+  @@index([ownerId])
+}
+
+model FamilyMember {
+  id        String           @id @default(cuid())
+  familyId  String
+  userId    String
+  role      FamilyMemberRole @default(MEMBER)
+  joinedAt  DateTime         @default(now())
+  isActive  Boolean          @default(true)
+
+  family    Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, userId])
+  @@index([familyId])
+  @@index([userId])
+}
+
+model Invitation {
+  id          String   @id @default(cuid())
+  familyId    String
+  senderId    String
+  receiverId  String?
+  email       String
+  role        FamilyMemberRole @default(MEMBER)
+  token       String   @unique
+  status      String   @default("PENDING")
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  sender      User     @relation("InvitationSender", fields: [senderId], references: [id])
+  receiver    User?    @relation("InvitationReceiver", fields: [receiverId], references: [id])
+
+  @@index([familyId])
+  @@index([token])
+  @@index([email])
+}
+
+model Child {
+  id          String         @id @default(cuid())
+  familyId    String
+  displayName String
+  name        String         // Alias for displayName compatibility
+  ageGroup    ChildAgeGroup
+  avatarId    String?
+  birthYear   Int?
+  birthMonth  Int?
+  settings    Json           @default("{}")
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+
+  family      Family         @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  devices     Device[]
+  policies    Policy[]
+  usageSummaries UsageSummary[]
+  screenTimeEvents ScreenTimeEvent[]
+  appRules    AppRule[]
+  schedules   Schedule[]
+  geofences   Geofence[]
+  alerts      Alert[]
+  requests    ChildRequest[]
+  locations   Location[]
+  safetyScores SafetyScore[]
+  coParentPermissions CoParentPermission[]
+  geofenceEvents GeofenceEvent[]
+  reports Report[]
+  pairingSessions PairingSession[]
+
+  @@index([familyId])
+  @@index([ageGroup])
+}
+
+model Device {
+  id              String       @id @default(cuid())
+  familyId        String
+  childId         String
+  platform        DevicePlatform
+  platformVersion String?
+  manufacturer    String?
+  model           String?
+  appVersion      String
+  buildNumber     String?
+  deviceName      String?
+  internalId      String       @unique
+  installationId  String       @unique
+  publicKey       String       @default("")
+  credentialVersion Int        @default(1)
+  status          DeviceStatus @default(PAIRING)
+  connectionType  ConnectionType @default(UNKNOWN)
+  capabilities    Json         @default("{}")
+  lastSeenAt      DateTime?
+  lastSyncAt      DateTime?
+  lastIp          String?
+  batteryLevel    Int?
+  storageUsed     BigInt?
+  storageTotal    BigInt?
+  policyVersion   Int          @default(0)
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
+
+  family          Family       @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child           Child        @relation(fields: [childId], references: [id], onDelete: Cascade)
+  healthRecords   DeviceHealth[]
+  events          DeviceEvent[]
+  commands        DeviceCommand[]
+  appInventory    AppInventory[]
+  usageSummaries  UsageSummary[]
+  policies        Policy[]
+  screenTimeEvents ScreenTimeEvent[]
+  geofenceEvents  GeofenceEvent[]
+  locations       Location[]
+  alerts          Alert[]
+
+  @@index([familyId])
+  @@index([childId])
+  @@index([internalId])
+  @@index([installationId])
+  @@index([status])
+}
+
+model DeviceHealth {
+  id              String   @id @default(cuid())
+  deviceId        String
+  backendConnected Boolean  @default(false)
+  authValid       Boolean  @default(false)
+  usageAccess     Boolean  @default(false)
+  vpnActive       Boolean  @default(false)
+  locationPerm    Boolean  @default(false)
+  backgroundLoc   Boolean  @default(false)
+  notificationPerm Boolean  @default(false)
+  backgroundService Boolean  @default(false)
+  batteryOptimized Boolean  @default(false)
+  appVersion      String
+  policyVersion   Int
+  batteryLevel    Int?
+  networkType     String?
+  manufacturer    String?
+  osVersion       String?
+  checkedAt       DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@index([checkedAt])
+}
+
+model DeviceEvent {
+  id          String   @id @default(cuid())
+  deviceId    String
+  eventId     String   @unique
+  eventType   String
+  eventVersion Int     @default(1)
+  childId     String
+  familyId    String
+  capturedAt  DateTime
+  sentAt      DateTime?
+  payload     Json
+  signature   String?
+  synced      Boolean  @default(false)
+  syncedAt    DateTime?
+  createdAt   DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@index([eventId])
+  @@index([eventType])
+  @@index([capturedAt])
+  @@index([synced])
+}
+
+model DeviceCommand {
+  id          String   @id @default(cuid())
+  deviceId    String
+  commandId   String   @unique
+  type        String
+  payload     Json
+  status      String   @default("QUEUED")
+  createdAt   DateTime @default(now())
+  sentAt      DateTime?
+  receivedAt  DateTime?
+  appliedAt   DateTime?
+  failedAt    DateTime?
+  error       String?
+  expiresAt   DateTime?
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@index([commandId])
+  @@index([status])
+}
+
+model PairingSession {
+  id                String   @id @default(cuid())
+  familyId          String
+  childId           String
+  platform          String
+  pairingCode       String   @unique
+  qrPayload         String
+  deviceInternalId  String?
+  deviceInfo        Json?
+  status            String   @default("PENDING")
+  expiresAt         DateTime
+  confirmedAt       DateTime?
+  cancelledAt       DateTime?
+  usedAt            DateTime?
+  claimedAt         DateTime?
+  deviceId          String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child  Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
+  @@index([childId])
+  @@index([pairingCode])
+  @@index([status])
+}
+
+model Policy {
+  id            String     @id @default(cuid())
+  familyId      String
+  childId       String
+  deviceId      String?
+  version       Int        @default(1)
+  screenTime    Json?
+  applications  Json?
+  schedules     Json?
+  webSafety     Json?
+  location      Json?
+  safeZones     Json?
+  essentialApps Json?
+  temporaryOverrides Json?
+  isActive      Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  appliedAt     DateTime?
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child  Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([familyId])
+  @@index([childId])
+  @@index([deviceId])
+  @@index([version])
+}
+
+model AppInventory {
+  id            String   @id @default(cuid())
+  deviceId      String
+  packageName   String
+  appName       String
+  versionName   String?
+  versionCode   Int?
+  category      String?
+  iconUrl       String?
+  isSystemApp   Boolean  @default(false)
+  installState  String   @default("INSTALLED")
+  firstDetected DateTime @default(now())
+  lastSeen      DateTime @default(now())
+  policyStatus  String   @default("UNMANAGED")
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, packageName])
+  @@index([deviceId])
+  @@index([packageName])
+}
+
+model AppRule {
+  id          String   @id @default(cuid())
+  childId     String
+  packageName String
+  ruleType    String
+  action      String
+  config      Json     @default("{}")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, packageName, ruleType])
+  @@index([childId])
+}
+
+model UsageSummary {
+  id            String   @id @default(cuid())
+  deviceId      String
+  childId       String
+  date          DateTime @db.Date
+  packageName   String
+  appName       String?
+  durationMs    BigInt   @default(0)
+  launchCount   Int      @default(0)
+  firstUsedAt   DateTime?
+  lastUsedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  child  Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, childId, date, packageName])
+  @@index([deviceId, date])
+  @@index([childId, date])
+}
+
+model ScreenTimeEvent {
+  id          String   @id @default(cuid())
+  childId     String
+  deviceId    String?
+  eventType   String
+  packageName String?
+  durationMs  BigInt?
+  limitMs     BigInt?
+  remainingMs BigInt?
+  triggeredAt DateTime
+  createdAt   DateTime @default(now())
+
+  child  Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([childId])
+  @@index([triggeredAt])
+}
+
+model Schedule {
+  id           String   @id @default(cuid())
+  childId      String
+  name         String
+  scheduleType String
+  startTime    String
+  endTime      String
+  days         Int[]
+  timezone     String
+  allowedApps  String[]
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId])
+  @@index([scheduleType])
+}
+
+model Geofence {
+  id          String   @id @default(cuid())
+  childId     String
+  name        String
+  latitude    Float
+  longitude   Float
+  radiusMeters Int
+  type        String   @default("CIRCLE")
+  alertOnEnter Boolean  @default(true)
+  alertOnExit  Boolean  @default(true)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  child   Child          @relation(fields: [childId], references: [id], onDelete: Cascade)
+  events  GeofenceEvent[]
+
+  @@index([childId])
+}
+
+model GeofenceEvent {
+  id          String   @id @default(cuid())
+  geofenceId  String
+  childId     String
+  deviceId    String?
+  eventType   String
+  latitude    Float
+  longitude   Float
+  accuracy    Float?
+  triggeredAt DateTime
+  createdAt   DateTime @default(now())
+
+  geofence Geofence @relation(fields: [geofenceId], references: [id], onDelete: Cascade)
+  child    Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  device   Device?  @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([geofenceId])
+  @@index([childId])
+  @@index([triggeredAt])
+}
+
+model Location {
+  id            String   @id @default(cuid())
+  childId       String
+  deviceId      String?
+  latitude      Float
+  longitude     Float
+  accuracyMeters Float
+  altitude      Float?
+  speed         Float?
+  heading       Float?
+  source        String
+  batteryLevel  Int?
+  capturedAt    DateTime
+  receivedAt    DateTime @default(now())
+
+  child  Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([childId])
+  @@index([capturedAt])
+  @@index([deviceId])
+}
+
+model Alert {
+  id           String       @id @default(cuid())
+  familyId     String
+  childId      String
+  deviceId     String?
+  type         String
+  severity     AlertSeverity
+  status       AlertStatus  @default(OPEN)
+  title        String
+  message      String
+  metadata     Json         @default("{}")
+  taraExplanation String?
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  acknowledgedAt DateTime?
+  acknowledgedById String?
+  resolvedAt   DateTime?
+  resolvedById String?
+  dismissedAt  DateTime?
+  createdAt    DateTime     @default(now())
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child  Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  parent User?  @relation("AlertParent", fields: [reviewedBy], references: [id])
+
+  @@index([familyId])
+  @@index([childId])
+  @@index([status])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+model ChildRequest {
+  id              String        @id @default(cuid())
+  childId         String
+  parentId        String?
+  type            RequestType
+  resource        String
+  resourceName    String?
+  requestedValue  Json
+  currentValue    Json?
+  status          RequestStatus @default(PENDING)
+  parentMessage   String?
+  childMessage    String?
+  expiresAt       DateTime
+  decidedAt       DateTime?
+  createdAt       DateTime      @default(now())
+
+  child  Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  parent User?  @relation("RequestParent", fields: [parentId], references: [id], onDelete: SetNull)
+
+  @@index([childId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model CoParentPermission {
+  id            String   @id @default(cuid())
+  familyId      String
+  childId       String
+  parentId      String
+  viewAlerts    Boolean  @default(true)
+  viewLocation  Boolean  @default(true)
+  approveRequests Boolean  @default(true)
+  modifyPolicies Boolean @default(false)
+  viewReports   Boolean  @default(true)
+  manageDevices Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child  Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  parent User   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, childId, parentId])
+  @@index([familyId])
+  @@index([childId])
+  @@index([parentId])
+}
+
+model Subscription {
+  id              String            @id @default(cuid())
+  familyId        String
+  userId          String
+  tier            SubscriptionTier  @default(FREE)
+  status          SubscriptionStatus @default(TRIALING)
+  provider        PaymentProvider
+  providerSubId   String?
+  providerCustId  String?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  trialEnd        DateTime?
+  cancelAtPeriodEnd Boolean        @default(false)
+  cancelledAt     DateTime?
+  devicesIncluded Int              @default(1)
+  price           Int              @default(0)
+  currency        String           @default("INR")
+  metadata        Json             @default("{}")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@index([familyId])
+  @@index([userId])
+  @@index([status])
+  @@index([providerSubId])
+}
+
+model Payment {
+  id            String       @id @default(cuid())
+  subscriptionId String
+  provider      PaymentProvider
+  providerId    String       @unique
+  amount        Int
+  currency      String       @default("INR")
+  status        PaymentStatus @default(PENDING)
+  description   String?
+  metadata      Json         @default("{}")
+  paidAt        DateTime?
+  createdAt     DateTime     @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([providerId])
+  @@index([status])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  familyId    String
+  childId     String
+  type        String
+  periodStart DateTime
+  periodEnd   DateTime
+  data        Json
+  generatedAt DateTime @default(now())
+  format      String   @default("JSON")
+  fileUrl     String?
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child  Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
+  @@index([childId])
+  @@index([generatedAt])
+}
+
+model SafetyScore {
+  id          String   @id @default(cuid())
+  childId     String
+  score       Int
+  factors     Json
+  formulaVersion String
+  completeness Float
+  calculatedAt DateTime @default(now())
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId])
+  @@index([calculatedAt])
+}
+
+model TaraConversation {
+  id          String   @id @default(cuid())
+  familyId    String
+  parentId    String
+  childId     String?
+  question    String
+  response    Json
+  context     Json
+  tokensUsed  Int
+  model       String
+  createdAt   DateTime @default(now())
+
+  @@index([familyId])
+  @@index([parentId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id          String             @id @default(cuid())
+  familyId    String
+  childId     String?
+  userId      String?
+  deviceId    String?
+  type        String
+  channel     NotificationChannel
+  title       String
+  body        String
+  data        Json               @default("{}")
+  status      String             @default("PENDING")
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  openedAt    DateTime?
+  error       String?
+  createdAt   DateTime           @default(now())
+
+  @@index([familyId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id          String       @id @default(cuid())
+  userId      String?
+  familyId    String?
+  childId     String?
+  deviceId    String?
+  action      AuditAction
+  resourceType String
+  resourceId  String?
+  oldValue    Json?
+  newValue    Json?
+  ipAddress   String?
+  userAgent   String?
+  success     Boolean      @default(true)
+  error       String?
+  createdAt   DateTime     @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([createdAt])
+}
+
+model PrivacyRequest {
+  id          String           @id @default(cuid())
+  userId      String
+  type        PrivacyRequestType
+  status      String           @default("PENDING")
+  description String?
+  childId     String?
+  requestedAt DateTime         @default(now())
+  completedAt DateTime?
+  data        Json             @default("{}")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  enabled     Boolean  @default(false)
+  rollout     Int      @default(0)
+  rules       Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  eventName String
+  userId    String?
+  familyId  String?
+  childId   String?
+  deviceId  String?
+  properties Json    @default("{}")
+  timestamp DateTime @default(now())
+
+  @@index([eventName])
+  @@index([userId])
+  @@index([familyId])
+  @@index([timestamp])
+}

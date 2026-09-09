@@ -1,0 +1,96 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.apk
+*.aab
+*.aar
+*.ipa
+
+# Flutter
+.dart_tool/
+.packages
+*.dart.js
+*.dart.js.map
+flutter_*.png
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Database
+*.sqlite
+*.db
+
+# Secrets
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+*.keystore
+
+# Gradle
+.gradle/
+build/
+*.gradle.kts
+!gradle.properties
+!gradle-wrapper.properties
+gradlew
+gradlew.bat
+
+# Android
+local.properties
+*.hprof
+captures/
+
+# Kotlin
+*.kt.metadata
+
+# Docker
+.docker/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
+# Kubernetes
+kubeconfig
+
+# Misc
+*.bak
+*.tmp
+*.temp
+.gstack/

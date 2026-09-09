@@ -1,0 +1,547 @@
+# gstack Project Configuration for Druvatara Guardian
+# Auto-documentation and plugin management for a multi-platform digital safety platform
+
+# Project metadata
+project:
+  name: "Druvatara Guardian"
+  description: "AI-powered digital safety and family protection platform for Android & iOS"
+  type: "multi-platform"
+  platforms:
+    - "android"
+    - "ios"
+    - "backend"
+    - "web"
+  frameworks:
+    - "flutter"
+    - "kotlin"
+    - "nestjs"
+    - "postgresql"
+    - "redis"
+
+# Auto-documentation settings
+auto_document: true
+document_on: "write"  # document on write/edit
+commit_docs: true     # auto-commit documentation changes
+
+# Documentation settings
+documentation:
+  framework: "diataxis"  # tutorial/how-to/reference/explanation
+  coverage_threshold: 80  # minimum coverage %
+  auto_generate: true
+  formats: ["markdown", "html"]
+  output_dir: "docs/"
+  diataxis_types:
+    - "tutorial"       # learning-oriented
+    - "how-to"         # problem-solving
+    - "reference"      # information-oriented
+    - "explanation"    # understanding-oriented
+
+# Plugin management
+plugins:
+  auto_install: true
+  auto_update: true
+  team_mode: true
+  required_skills:
+    # Planning agents
+    - "office-hours"         # Start every feature - product discovery
+    - "plan-ceo-review"      # Strategic product review
+    - "plan-eng-review"      # Technical architecture review
+    - "plan-design-review"   # UX/UI design review
+    - "plan-devex-review"    # Developer experience review
+    - "plan-tune"            # Iteration planning
+    - "autoplan"             # Full planning pipeline
+    - "spec"                 # Specification authoring
+    
+    # Review agents
+    - "review"               # Staff engineer code review
+    - "design-review"        # Design audit + fix
+    - "devex-review"         # DX audit
+    - "qa"                   # QA lead - test, find bugs, fix
+    - "qa-only"              # Bug report only
+    - "cso"                  # Chief Security Officer
+    
+    # Design agents
+    - "design-consultation"  # Design system from scratch
+    - "design-html"          # Mockup to production HTML
+    - "design-shotgun"       # Design variants exploration
+    
+    # Shipping agents
+    - "ship"                 # Release engineer - test, audit, PR
+    - "land-and-deploy"      # Merge, deploy, verify
+    - "canary"               # Post-deploy monitoring
+    - "benchmark"            # Performance baselines
+    
+    # Docs agents
+    - "document-generate"    # Generate docs from code
+    - "document-release"     # Post-ship docs update
+    
+    # Debugging agents
+    - "investigate"          # Root cause debugging
+    - "retro"                # Weekly retrospective
+    - "learn"                # Manage project learnings
+    
+    # Tools
+    - "browse"               # Headless browser
+    - "qa"                   # QA testing
+    - "ship"                 # Release
+    - "freeze"               # Edit lock
+    - "unfreeze"             # Unlock
+    - "guard"                # Full safety
+    - "careful"              # Safety warnings
+    - "open-gstack-browser"  # Visual browser
+    
+    # Setup
+    - "setup-browser-cookies"
+    - "setup-deploy"
+    - "setup-gbrain"
+    - "gstack-upgrade"
+    - "gstack-upgrade"
+    
+    # iOS specific (for Phase 2)
+    - "ios-qa"               # iOS device QA
+    - "ios-fix"              # iOS bug fixes
+    - "ios-design-review"    # iOS HIG audit
+    - "ios-clean"            # iOS cleanup
+    - "ios-sync"             # iOS sync
+    
+    # Other
+    - "autoplan"             # Full planning pipeline
+    - "plan-ceo-review"      # CEO strategic review
+    - "plan-eng-review"      # Engineering review
+    - "plan-design-review"   # Design review
+    - "plan-devex-review"    # DX review
+    - "plan-tune"            # Iteration planning
+    - "spec"                 # Specification
+    - "cso"                  # Security
+    - "health"               # Health check
+    - "investigate"          # Debug
+    - "retro"                # Retrospective
+    - "scrape"               # Web scraping
+    - "setup-browser-cookies"
+    - "setup-deploy"
+    - "setup-gbrain"
+    - "sync-gbrain"
+    - "benchmark"
+    - "benchmark-models"
+    - "diagram"
+    - "make-pdf"
+    - "ship"
+    - "skillify"
+    - "spec"
+    - "sync-gbrain"
+    - "unfreeze"
+    - "upgrade"
+    - "careful"
+    - "freeze"
+    - "guard"
+    - "unfreeze"
+
+# Auto-install on skill invocation
+auto_install_on_invoke: true
+
+# Auto-update check (hours)
+auto_update_check_hours: 1
+
+# Team mode settings
+team_mode:
+  enabled: true
+  auto_commit: true
+  auto_push: false
+  checkpoint_mode: "continuous"
+  checkpoint_push: false
+
+# Document generation settings
+doc_generate:
+  framework: "diataxis"
+  types: ["tutorial", "how-to", "reference", "explanation"]
+  auto_generate_on: ["new_module", "new_feature", "api_change"]
+  exclude_patterns:
+    - "node_modules/**"
+    - "dist/**"
+    - "build/**"
+    - ".git/**"
+    - "*.lock"
+    - "*.log"
+    - "android_native/**/build/**"
+    - "apps/**/build/**"
+    - "backend/dist/**"
+
+# Document release settings
+doc_release:
+  auto_run_on_merge: true
+  update_changelog: true
+  bump_version: false
+  update_readme: true
+  update_architecture: true
+  update_contributing: true
+  update_claude_md: true
+  check_diagrams: true
+  coverage_map: true
+  sell_test_rubric: true
+
+# Hook configuration
+hooks:
+  post_write:
+    - "document-generate --changed-file {file} --auto"
+  post_edit:
+    - "document-generate --changed-file {file} --auto"
+  stop:
+    - "document-release --auto"
+
+# Plugin auto-install
+plugin_auto_install: true
+plugin_registry: "https://github.com/garrytan/gstack"
+
+# Git integration
+git:
+  auto_commit: true
+  commit_message_template: "docs: update documentation for {files}"
+  commit_docs_separately: true
+  sign_commits: false
+
+# Agent/Role assignments for this project
+# Maps gstack skills to project roles
+agents:
+  # CEO / Product Owner - Strategic decisions
+  ceo:
+    skills:
+      - "office-hours"
+      - "plan-ceo-review"
+      - "plan-tune"
+    triggers:
+      - "new_feature"
+      - "strategic_decision"
+      - "scope_change"
+    focus: "Strategic product decisions, scope management, 10-star product vision"
+
+  # Engineering Manager - Architecture & Technical
+  eng_manager:
+    skills:
+      - "plan-eng-review"
+      - "plan-tune"
+      - "retro"
+      - "investigate"
+    triggers:
+      - "architecture_change"
+      - "technical_debt"
+      - "performance_issue"
+      - "sprint_planning"
+    focus: "Architecture, data flow, diagrams, edge cases, tests, technical debt"
+
+  # Senior Designer - UX/UI
+  designer:
+    skills:
+      - "plan-design-review"
+      - "design-review"
+      - "design-consultation"
+      - "design-html"
+      - "design-shotgun"
+    triggers:
+      - "ui_change"
+      - "new_ui_feature"
+      - "design_system_change"
+    focus: "UX/UI design, design systems, accessibility, AI slop detection"
+
+  # DevEx Lead - Developer Experience
+  devex_lead:
+    skills:
+      - "plan-devex-review"
+      - "devex-review"
+    triggers:
+      - "api_change"
+      - "sdk_change"
+      - "onboarding_improvement"
+      - "tooling_change"
+    focus: "API design, onboarding, TTHW, friction points, magical moments"
+
+  # Staff Engineer - Code Quality
+  staff_engineer:
+    skills:
+      - "review"
+      - "investigate"
+      - "careful"
+      - "freeze"
+    triggers:
+      - "code_review"
+      - "bug_investigation"
+      - "production_issue"
+      - "refactoring"
+    focus: "Code review, bug fixing, production issues, refactoring"
+
+  # QA Lead - Testing & Quality
+  qa_lead:
+    skills:
+      - "qa"
+      - "qa-only"
+      - "canary"
+      - "benchmark"
+    triggers:
+      - "pre_release"
+      - "regression_test"
+      - "performance_test"
+      - "manual_qa"
+    focus: "Test automation, bug finding, regression prevention, performance"
+
+  # Security Officer - Security
+  cso:
+    skills:
+      - "cso"
+      - "careful"
+      - "investigate"
+    triggers:
+      - "security_audit"
+      - "vulnerability_scan"
+      - "compliance_check"
+      - "data_privacy"
+    focus: "OWASP Top 10, STRIDE threat modeling, data privacy, compliance"
+
+  # Release Engineer - Shipping
+  release_engineer:
+    skills:
+      - "ship"
+      - "land-and-deploy"
+      - "canary"
+    triggers:
+      - "release"
+      - "hotfix"
+      - "deployment"
+    focus: "Release automation, deployment, post-deploy verification"
+
+  # Technical Writer - Documentation
+  tech_writer:
+    skills:
+      - "document-generate"
+      - "document-release"
+      - "document-generate"
+    triggers:
+      - "code_change"
+      - "api_change"
+      - "new_feature"
+      - "post_merge"
+    focus: "Diataxis documentation, API docs, tutorials, architecture docs"
+
+  # DevOps / Platform Engineer
+  devops:
+    skills:
+      - "setup-deploy"
+      - "setup-gbrain"
+      - "sync-gbrain"
+      - "canary"
+      - "benchmark"
+      - "land-and-deploy"
+    triggers:
+      - "deployment"
+      - "infrastructure_change"
+      - "monitoring_setup"
+      - "performance_baseline"
+    focus: "Deployment, monitoring, performance, infrastructure"
+
+  # Mobile Engineer - iOS/Android
+  mobile_engineer:
+    skills:
+      - "ios-qa"
+      - "ios-fix"
+      - "ios-design-review"
+      - "ios-clean"
+      - "ios-sync"
+      - "qa"
+      - "review"
+    triggers:
+      - "ios_change"
+      - "android_change"
+      - "mobile_release"
+      - "device_testing"
+    focus: "Mobile development, device testing, HIG/Material compliance"
+
+# Skill routing rules - when to invoke which agent
+routing:
+  # On new feature request
+  - pattern: "new feature|new module|new feature request"
+    agent: "ceo"
+    next: "eng_manager"
+  
+  # On architecture change
+  - pattern: "architecture|refactor|refactor|technical debt|refactor"
+    agent: "eng_manager"
+    next: "staff_engineer"
+  
+  # On UI/UX change
+  - pattern: "ui|ux|design|interface|mockup|figma|design"
+    agent: "designer"
+    next: "devex_lead"
+  
+  # On API/SDK change
+  - pattern: "api|sdk|endpoint|rest|graphql|api"
+    agent: "devex_lead"
+    next: "staff_engineer"
+  
+  # On code review request
+  - pattern: "review|pr|pull request|code review"
+    agent: "staff_engineer"
+    next: "qa_lead"
+  
+  # On bug/issue
+  - pattern: "bug|issue|error|crash|exception|fail"
+    agent: "staff_engineer"
+    next: "qa_lead"
+    next: "investigate"
+  
+  # On security concern
+  - pattern: "security|vulnerability|owasp|penetration|audit|compliance"
+    agent: "cso"
+    next: "staff_engineer"
+  
+  # On performance issue
+  - pattern: "performance|slow|latency|benchmark|optimize"
+    agent: "eng_manager"
+    next: "devops"
+  
+  # On release/deploy
+  - pattern: "release|deploy|ship|release|hotfix|production"
+    agent: "release_engineer"
+    next: "canary"
+  
+  # On documentation request
+  - pattern: "docs|documentation|readme|document"
+    agent: "tech_writer"
+  
+  # On security audit
+  - pattern: "security audit|cso|security review"
+    agent: "cso"
+  
+  # On iOS/Android specific
+  - pattern: "ios|android|mobile|flutter|kotlin|swift"
+    agent: "mobile_engineer"
+    next: "qa_lead"
+
+# Skill sequences for common workflows
+workflows:
+  # Full feature development
+  feature_development:
+    - "office-hours"           # Product discovery
+    - "plan-ceo-review"        # Strategic review
+    - "plan-eng-review"        # Architecture
+    - "plan-design-review"     # UX/UI design
+    - "plan-devex-review"      # DX/API design
+    - "autoplan"               # Auto-generate plan
+    - "staff_engineer"         # Implementation + review
+    - "qa"                     # QA testing
+    - "ship"                   # Release
+  
+  # Bug fix workflow
+  bug_fix:
+    - "investigate"            # Root cause
+    - "staff_engineer"         # Fix
+    - "review"                 # Code review
+    - "qa"                     # Test fix
+    - "ship"                   # Release
+  
+  # Security audit
+  security_audit:
+    - "cso"                    # Security audit
+    - "investigate"            # Deep dive
+    - "review"                 # Code review
+    - "ship"                   # Deploy fixes
+  
+  # Release workflow
+  release:
+    - "qa"                     # Full QA
+    - "benchmark"              # Performance baseline
+    - "ship"                   # Release
+    - "land-and-deploy"        # Deploy
+    - "canary"                 # Monitor
+  
+  # Documentation sync
+  doc_sync:
+    - "document-generate"      # Generate missing docs
+    - "document-release"       # Sync with release
+
+# Skill aliases for common invocations
+aliases:
+  plan: "autoplan"
+  review: "review"
+  test: "qa"
+  deploy: "land-and-deploy"
+  release: "ship"
+  docs: "document-generate"
+  security: "cso"
+  debug: "investigate"
+  retro: "retro"
+  design: "design-review"
+  perf: "benchmark"
+  deploy: "land-and-deploy"
+
+# Project-specific context
+context:
+  repo_root: "C:\\Projects\\Druvatara Andriod"
+  main_branch: "main"
+  protected_branches: ["main", "develop", "release/*"]
+  
+  # Paths that trigger specific agents
+  paths:
+    apps/guardian_parent/**:
+      - mobile_engineer
+      - designer
+      - qa_lead
+    apps/guardian_child/**:
+      - mobile_engineer
+      - qa_lead
+    android_native/guardian_engine/**:
+      - mobile_engineer
+      - staff_engineer
+      - cso
+    backend/src/**:
+      - eng_manager
+      - staff_engineer
+      - devex_lead
+      - qa_lead
+      - tech_writer
+    backend/prisma/**:
+      - eng_manager
+      - tech_writer
+    docs/**:
+      - tech_writer
+    .github/workflows/**:
+      - devops
+      - release_engineer
+
+# Compliance & Safety
+compliance:
+  coppa: true       # Children's Online Privacy Protection Act
+  gdpr: true        # General Data Protection Regulation
+  pdpa: true        # India Personal Data Protection Act
+  hipaa: false      # Not applicable
+  sox: false        # Not applicable
+  
+  # Required reviews for compliance
+  required_reviews:
+    - "cso"          # Security review required
+    - "eng_manager"  # Architecture review
+    - "legal"        # Legal review (manual)
+
+# Monitoring & Observability
+monitoring:
+  metrics:
+    - "build_time"
+    - "test_coverage"
+    - "deployment_frequency"
+    - "change_failure_rate"
+    - "mttr"
+  alerts:
+    - "build_failure"
+    - "test_failure"
+    - "deployment_failure"
+    - "security_alert"
+    - "performance_degradation"
+
+# Learning & Continuous Improvement
+learning:
+  enabled: true
+  capture_patterns:
+    - "bug_fix"
+    - "performance_optimization"
+    - "security_fix"
+    - "architectural_decision"
+    - "design_decision"
+  retro_schedule: "weekly"
+  retro_participants: ["eng_manager", "staff_engineer", "designer", "qa_lead"]

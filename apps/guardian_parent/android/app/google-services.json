@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "823300451019",
+    "project_id": "druvatara-guardian",
+    "storage_bucket": "druvatara-guardian.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823300451019:android:b424f0d6d64d23ac97894e",
+        "android_client_info": {
+          "package_name": "com.druvatara.guardian.child"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAV25sjtJj3euKB0ZpA1NjmcniLUsXT0n8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823300451019:android:de902877526776d697894e",
+        "android_client_info": {
+          "package_name": "com.druvatara.guardian.parent"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAV25sjtJj3euKB0ZpA1NjmcniLUsXT0n8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823300451019:android:de902877526776d697894e",
+        "android_client_info": {
+          "package_name": "com.druvatara.guardian_parent.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAV25sjtJj3euKB0ZpA1NjmcniLUsXT0n8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

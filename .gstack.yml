@@ -1,0 +1,92 @@
+# gstack Project Configuration
+# Auto-documentation and plugin management for Druvatara Guardian
+
+# Auto-documentation settings
+auto_document: true
+document_on: "write"  # document on write (write/edit)
+commit_docs: true     # auto-commit documentation changes
+
+# Documentation settings
+documentation:
+  framework: "diataxis"  # tutorial/how-to/reference/explanation
+  coverage_threshold: 80  # minimum coverage %
+  auto_generate: true
+  formats: ["markdown", "html"]
+  output_dir: "docs/"
+
+# Plugin management
+plugins:
+  auto_install: true
+  auto_update: true
+  team_mode: true
+  required_skills:
+    - "document-generate"
+    - "document-release"
+    - "review"
+    - "qa"
+    - "ship"
+    - "autoplan"
+    - "plan-ceo-review"
+    - "plan-eng-review"
+    - "plan-design-review"
+    - "plan-devex-review"
+
+# Auto-install on skill invocation
+auto_install_on_invoke: true
+
+# Auto-update check (hours)
+auto_update_check_hours: 1
+
+# Team mode settings
+team_mode:
+  enabled: true
+  auto_commit: true
+  auto_push: false
+  checkpoint_mode: "continuous"
+  checkpoint_push: false
+
+# Document generation settings
+doc_generate:
+  framework: "diataxis"
+  types: ["tutorial", "how-to", "reference", "explanation"]
+  auto_generate_on: ["new_module", "new_feature", "api_change"]
+  exclude_patterns:
+    - "node_modules/**"
+    - "dist/**"
+    - "build/**"
+    - ".git/**"
+    - "*.lock"
+    - "*.log"
+
+# Document release settings
+doc_release:
+  auto_run_on_merge: true
+  update_changelog: true
+  bump_version: false
+  update_readme: true
+  update_architecture: true
+  update_contributing: true
+  update_claude_md: true
+  check_diagrams: true
+  coverage_map: true
+  sell_test_rubric: true
+
+# Hook configuration
+hooks:
+  post_write:
+    - "document-generate --changed-file {file} --auto"
+  post_edit:
+    - "document-generate --changed-file {file} --auto"
+  stop:
+    - "document-release --auto"
+
+# Plugin auto-install
+plugin_auto_install: true
+plugin_registry: "https://github.com/garrytan/gstack"
+
+# Git integration
+git:
+  auto_commit: true
+  commit_message_template: "docs: update documentation for {files}"
+  commit_docs_separately: true
+  sign_commits: false

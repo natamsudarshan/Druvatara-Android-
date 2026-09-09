@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Druvatara Guardian</string>
+    <string name="guardian_service_channel">Guardian Service</string>
+    <string name="guardian_service_description">Background protection service for digital safety</string>
+</resources>
