@@ -1,0 +1,67 @@
+name: Build APKs
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  build-parent:
+    name: Build Guardian Parent APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.3'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: |
+          cd apps/guardian_parent
+          flutter pub get
+
+      - name: Build APK (release)
+        run: |
+          cd apps/guardian_parent
+          flutter build apk --release --split-per-abi
+
+      - name: Upload Parent APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: guardian-parent-apks
+          path: apps/guardian_parent/build/app/outputs/flutter-apk/*.apk
+          retention-days: 7
+
+  build-child:
+    name: Build Guardian Child APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.3'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: |
+          cd apps/guardian_child
+          flutter pub get
+
+      - name: Build APK (release)
+        run: |
+          cd apps/guardian_child
+          flutter build apk --release --split-per-abi
+
+      - name: Upload Child APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: guardian-child-apks
+          path: apps/guardian_child/build/app/outputs/flutter-apk/*.apk
+          retention-days: 7
